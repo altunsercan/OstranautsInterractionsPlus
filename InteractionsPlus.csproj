@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net35</TargetFramework>
+        <LangVersion>7.0</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <OutputPath>D:\SteamLibrary\steamapps\common\Ostranauts\Mods\InteractionsPlus\</OutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <Reference Include="0Harmony, Version=2.0.2.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>D:\SteamLibrary\steamapps\common\Ostranauts\Ostranauts_Data\Managed\UnityModManager\0Harmony.dll</HintPath>
+      </Reference>
+      <Reference Include="Assembly-CSharp, Version=4.2.0.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>D:\SteamLibrary\steamapps\common\Ostranauts\Ostranauts_Data\Managed\Assembly-CSharp.dll</HintPath>
+        <Private>False</Private>
+      </Reference>
+      <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>D:\SteamLibrary\steamapps\common\Ostranauts\Ostranauts_Data\Managed\UnityEngine.dll</HintPath>
+        <Private>False</Private>
+      </Reference>
+      <Reference Include="UnityModManager, Version=0.22.14.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>D:\SteamLibrary\steamapps\common\Ostranauts\Ostranauts_Data\Managed\UnityModManager\UnityModManager.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Info.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>
