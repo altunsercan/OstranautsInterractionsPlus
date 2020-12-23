@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using HarmonyLib;
+using InteractionsPlus.Handlers;
 using InteractionsPlus.UI.IMGUI;
 using JetBrains.Annotations;
 
@@ -13,16 +14,19 @@ namespace InteractionsPlus
         [NotNull] private readonly Harmony harmony;
         
         [NotNull] private readonly IMGUIExecutor immediateGUIExecutor;
+        [NotNull] private readonly HandlerManager handlerManager;
         
         internal InteractionsPlusMod([NotNull]ILogger logger)
         {
             this.logger = logger;
             IMGUIExecutor = new IMGUIExecutor();
+            handlerManager = new HandlerManager(logger);
             immediateGUIExecutor = new IMGUIExecutor();
             harmony = new Harmony("com.ostranauts.marchingninja.interactionsplus");
 
             Services.SetLogger(logger);
             Services.Bind<ILogger>(logger);
+            Services.Bind<HandlerManager>(handlerManager);
             Services.Bind<IMGUIExecutor>(immediateGUIExecutor);
         }
         
@@ -41,6 +45,7 @@ namespace InteractionsPlus
         
         private void EnableMod()
         {
+            handlerManager.DisoverHandlersInAllAssemblies();
             
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             logger.Log("Interactions+ enabled");
