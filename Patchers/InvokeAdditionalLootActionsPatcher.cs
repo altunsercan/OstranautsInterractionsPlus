@@ -1,5 +1,6 @@
 ﻿using System;
 using HarmonyLib;
+using InteractionsPlus.Handlers;
 using JetBrains.Annotations;
 
 namespace InteractionsPlus.Patchers
@@ -38,7 +39,8 @@ namespace InteractionsPlus.Patchers
                 return;
             }
 
-            __result = additionalData.InvokeLootActions();
+            InteractionTriggerArgs args = new InteractionTriggerArgs(__0, __1, __2, __3, __4);
+            __result = additionalData.InvokeLootActions(args);
         }
     }
     

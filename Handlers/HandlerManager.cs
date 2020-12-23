@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using HarmonyLib;
 using InteractionsPlus.JetBrains.Annotations;
+using UnityEngine;
 
 namespace InteractionsPlus.Handlers
 {
@@ -71,14 +73,16 @@ namespace InteractionsPlus.Handlers
                 // TODO: Non-static handlers need instance to invoke
                 return null;
             }
-
+            
             ParameterInfo[] parameters = methodInfo.GetParameters();
             Type[] parameterTypes = parameters.Select(p => p.ParameterType).ToArray();
 
-            Type delegateType = typeof(Action<>).MakeGenericType(parameterTypes);
-            Delegate delegateMethod = Delegate.CreateDelegate(delegateType, methodInfo);
-            return new HandlerMethodCache(methodInfo.Name, delegateType, parameterTypes, delegateMethod);
+            Func<object[], bool> delegateExpression =
+                (arguments) => (bool)methodInfo.Invoke(null, arguments);
+            return new HandlerMethodCache(methodInfo.Name, parameterTypes, delegateExpression);
         }
+
+        private T Cast<T>(object source) => (T) source;
 
         private bool HasHandlerAttribute(MethodInfo method) =>
             method.GetCustomAttributes(typeof(InteractionHandlerAttribute), true).Length>0;

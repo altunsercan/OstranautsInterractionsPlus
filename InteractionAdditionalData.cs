@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using InteractionsPlus.Handlers;
 
 namespace InteractionsPlus
 {
@@ -8,34 +7,28 @@ namespace InteractionsPlus
     {
         private readonly Interaction interaction;
 
-        private List<Func<bool>> inverseActions;
-        private List<Func<bool>> lootActions;
+        private List<LootActionDelegate> lootActions;
         
         public InteractionAdditionalData(Interaction interaction)
         {
             this.interaction = interaction;
         }
-
-        public void SetAdditionalInverseActions(List<Func<bool>> inverseActions)
-        {
-            this.inverseActions = inverseActions;
-        }
-
-        public void SetAdditionalLootActions(List<Func<bool>> lootActions)
+        
+        public void SetAdditionalLootActions(List<LootActionDelegate> lootActions)
         {
             this.lootActions = lootActions;
         }
 
-        public bool InvokeLootActions()
+        public bool InvokeLootActions(InteractionTriggerArgs args)
         {
             if (lootActions == null)
             {
                 return true;
             }
             
-            foreach (Func<bool> action in lootActions)
+            foreach (LootActionDelegate action in lootActions)
             {
-                var result =action?.Invoke();
+                var result = action?.Invoke(args);
                 if (result.HasValue && !result.Value)
                 {
                     return false;

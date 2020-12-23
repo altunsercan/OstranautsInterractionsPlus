@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using InteractionsPlus.Handlers;
 using JetBrains.Annotations;
@@ -25,33 +26,26 @@ namespace InteractionsPlus.Patchers
             }
 
             var additionalData = additionalsManager.CreateAdditionalData(interaction);
-            if (__0.aInverse != null)
-            {
-                List<Func<bool>> inverseAction = ParseActions(handlerManager, __0.aInverse);
-                additionalData.SetAdditionalInverseActions(inverseAction);
-            }
-
             if (__0.aLootItms != null)
             {
-                List<Func<bool>> lootActions = ParseActions(handlerManager, __0.aLootItms);
+                List<LootActionDelegate> lootActions = ParseActions(handlerManager, __instance.strName, __0.aLootItms);
                 additionalData.SetAdditionalLootActions(lootActions);
             }
-            
-            
             return;
         }
 
-        private static List<Func<bool>> ParseActions(HandlerManager manager, [NotNull] string[] actionStrArr)
+        private static List<LootActionDelegate> ParseActions(HandlerManager manager, string interactionName,
+            [NotNull] string[] actionStrArr)
         {
-            List<Func<bool>> actions = new List<Func<bool>>();
+            List<LootActionDelegate> actions = new List<LootActionDelegate>();
             foreach (string actionItemStr in actionStrArr)
             {
-                AppendAction(actions, ParseAction(manager, actionItemStr));
+                AppendAction(actions, ParseAction(manager, interactionName, actionItemStr));
             }
             return actions;
         }
 
-        private static void AppendAction([NotNull]List<Func<bool>> actions, Func<bool> parseAction)
+        private static void AppendAction([NotNull]List<LootActionDelegate> actions, LootActionDelegate parseAction)
         {
             if (parseAction == null)
             {
@@ -60,7 +54,10 @@ namespace InteractionsPlus.Patchers
             actions.Add(parseAction);
         }
         
-        private static Func<bool> ParseAction(HandlerManager manager, string actionItemStr)
+        private static LootActionDelegate ParseAction(
+            [NotNull] HandlerManager manager, 
+            [NotNull] string interactionName,
+            [NotNull] string actionItemStr)
         {
             string[] tokens = actionItemStr.Split(',');
             if (tokens.Length == 0)
@@ -74,28 +71,40 @@ namespace InteractionsPlus.Patchers
                 return null;
             }
 
-            if (tokens.Length-1 != cache.ParameterTypes.Length)
+            var specialInjectType = typeof(InteractionTriggerArgs);
+
+            var hasSpecialInject = cache.ParameterTypes.Contains(specialInjectType);
+            var tokensNeeded = cache.ParameterTypes.Length + 1 - ((hasSpecialInject) ? 1 : 0);
+            
+            if (tokens.Length != tokensNeeded)
             {
+                logger?.Error($"Incorrect number of tokens for {name} in {interactionName}. Expected {tokensNeeded}, got {tokens.Length-1}");
                 return null;
             }
 
-            object[] parameters = new object[tokens.Length-1];
+            int triggerArgIndex = -1;
+            int tokenIndexShift = 1;
+            object[] parameters = new object[cache.ParameterTypes.Length];
             for (var index = 0; index < cache.ParameterTypes.Length; index++)
             {
                 Type parameterType = cache.ParameterTypes[index];
-                parameters[index] = ConvertParameter(parameterType, tokens[index + 1]);
+                if (parameterType == specialInjectType)
+                {
+                    triggerArgIndex = index;
+                    tokenIndexShift--;
+                    continue;
+                }
+                
+                parameters[index] = ConvertParameter(parameterType, tokens[index + tokenIndexShift]);
             }
 
-            Func<bool> callDelegate = ()=>
+            LootActionDelegate callDelegate = (args)=>
             {
-                logger?.Log($"Action called {actionItemStr}");
-                
-                object result = cache.Delegate.DynamicInvoke(parameters);
-                if (result is bool boolResult)
+                if (triggerArgIndex != -1)
                 {
-                    return boolResult;
+                    parameters[triggerArgIndex] = args;
                 }
-                return true;
+                return cache.Delegate(parameters);
             };
             return callDelegate;
         }
