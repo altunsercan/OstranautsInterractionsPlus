@@ -2,7 +2,7 @@
 
 namespace InteractionsPlus
 {
-    public interface ILogger
+    internal interface ILogger
     {
         void Log(string msg);
         void Critical(string msg);

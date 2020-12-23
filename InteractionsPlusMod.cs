@@ -1,16 +1,24 @@
-﻿using InteractionsPlus.UI.IMGUI;
+using InteractionsPlus.UI.IMGUI;
+using JetBrains.Annotations;
 
 namespace InteractionsPlus
 {
     public class InteractionsPlusMod
     {
-        private readonly ILogger logger;
-        public readonly IMGUIExecutor IMGUIExecutor;
+        [NotNull] public static readonly ServiceLocator Services = new ServiceLocator(); 
         
-        public InteractionsPlusMod(ILogger logger)
+        [NotNull] private readonly ILogger logger;
+        
+        [NotNull] private readonly IMGUIExecutor immediateGUIExecutor;
+        
+        internal InteractionsPlusMod([NotNull]ILogger logger)
         {
             this.logger = logger;
             IMGUIExecutor = new IMGUIExecutor();
+            immediateGUIExecutor = new IMGUIExecutor();
+            Services.SetLogger(logger);
+            Services.Bind<ILogger>(logger);
+            Services.Bind<IMGUIExecutor>(immediateGUIExecutor);
         }
         
         public bool OnToggle(bool toggle)
