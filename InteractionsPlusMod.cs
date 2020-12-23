@@ -15,18 +15,20 @@ namespace InteractionsPlus
         
         [NotNull] private readonly IMGUIExecutor immediateGUIExecutor;
         [NotNull] private readonly HandlerManager handlerManager;
+        [NotNull] private readonly InteractionAdditionalActionsManager additionalDataManager;
         
         internal InteractionsPlusMod([NotNull]ILogger logger)
         {
             this.logger = logger;
-            IMGUIExecutor = new IMGUIExecutor();
             handlerManager = new HandlerManager(logger);
+            additionalDataManager = new InteractionAdditionalActionsManager();
             immediateGUIExecutor = new IMGUIExecutor();
             harmony = new Harmony("com.ostranauts.marchingninja.interactionsplus");
 
             Services.SetLogger(logger);
             Services.Bind<ILogger>(logger);
             Services.Bind<HandlerManager>(handlerManager);
+            Services.Bind<InteractionAdditionalActionsManager>(additionalDataManager);
             Services.Bind<IMGUIExecutor>(immediateGUIExecutor);
         }
         
