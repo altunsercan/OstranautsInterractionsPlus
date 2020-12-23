@@ -2,27 +2,20 @@
 
 namespace InteractionsPlus.UI.IMGUI
 {
-    public class ModEnabledIMGUI : IIMGUIHandler
+    public class DebugMessageIMGUI : IIMGUIHandler
     {
-        private readonly ILogger logger;
-        private bool firstDraw;
-        
         private readonly IMGUIExecutor executor;
+        private readonly string message;
         private float timeout;
-        public ModEnabledIMGUI(ILogger logger, IMGUIExecutor executor)
+        public DebugMessageIMGUI(IMGUIExecutor executor, string message)
         {
-            this.logger = logger;
             this.executor = executor;
+            this.message = message;
             timeout = 5f;
         }
 
         public void OnGUI()
         {
-            if (!firstDraw)
-            {
-                logger.Log("First Draw");
-                firstDraw = true;
-            }
             
             timeout -= Time.unscaledDeltaTime;
             if (timeout <= 0f)
@@ -31,7 +24,7 @@ namespace InteractionsPlus.UI.IMGUI
                 return;
             }
             
-            GUILayout.Label("Interactions + Loaded");
+            GUILayout.Label(message);
         }
     }
 }
