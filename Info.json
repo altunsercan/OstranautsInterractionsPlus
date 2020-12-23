@@ -1,8 +1,8 @@
 ﻿{
   "Id": "InteractionsPlus",
   "DisplayName": "Interactions +",
-  "Author": "marchingninja",
-  "Version": "0.0.1",
+  "Author": "Sercan `marchingninja` Altun",
+  "Version": "0.1.0",
   "ManagerVersion": "0.22.0",
   "Requirements": [],
   "LoadAfter": [],

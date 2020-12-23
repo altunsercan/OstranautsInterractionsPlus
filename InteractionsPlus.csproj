@@ -3,6 +3,8 @@
     <PropertyGroup>
         <TargetFramework>net35</TargetFramework>
         <LangVersion>7.0</LangVersion>
+        <PackageVersion>0.1.0</PackageVersion>
+        <AssemblyVersion>0.1.0</AssemblyVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
