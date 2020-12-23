@@ -25,5 +25,24 @@ namespace InteractionsPlus
         {
             this.lootActions = lootActions;
         }
+
+        public bool InvokeLootActions()
+        {
+            if (lootActions == null)
+            {
+                return true;
+            }
+            
+            foreach (Func<bool> action in lootActions)
+            {
+                var result =action?.Invoke();
+                if (result.HasValue && !result.Value)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
     }
 }
