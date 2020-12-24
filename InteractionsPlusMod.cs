@@ -2,6 +2,7 @@
 using System.Reflection;
 using HarmonyLib;
 using InteractionsPlus.Handlers;
+using InteractionsPlus.JsonMerging;
 using InteractionsPlus.ModDependency;
 using InteractionsPlus.UI.IMGUI;
 using JetBrains.Annotations;
@@ -20,8 +21,9 @@ namespace InteractionsPlus
         [NotNull] private readonly IMGUIExecutor immediateGUIExecutor;
         [NotNull] private readonly HandlerManager handlerManager;
         [NotNull] private readonly InteractionAdditionalActionsManager additionalDataManager;
-        
         [NotNull] private readonly UMMDependencyManager dependencyManager;
+        [NotNull] private readonly MergedJsonDataManager mergedJsonManager;
+
         internal InteractionsPlusMod([NotNull]ILogger logger)
         {
             this.logger = logger;
@@ -29,6 +31,8 @@ namespace InteractionsPlus
             additionalDataManager = new InteractionAdditionalActionsManager();
             immediateGUIExecutor = new IMGUIExecutor();
             dependencyManager = new UMMDependencyManager(logger);
+            mergedJsonManager = new MergedJsonDataManager(logger);
+            
             harmony = new Harmony("com.ostranauts.marchingninja.interactionsplus");
 
             Services.SetLogger(logger);
@@ -37,6 +41,7 @@ namespace InteractionsPlus
             Services.Bind<InteractionAdditionalActionsManager>(additionalDataManager);
             Services.Bind<IMGUIExecutor>(immediateGUIExecutor);
             Services.Bind<UMMDependencyManager>(dependencyManager);
+            Services.Bind<MergedJsonDataManager>(mergedJsonManager);
         }
         
         public bool OnToggle(bool toggle)
@@ -55,6 +60,7 @@ namespace InteractionsPlus
         private void EnableMod()
         {
             handlerManager.DisoverHandlersInAllAssemblies();
+            mergedJsonManager.Initialized();
             
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             logger.Log("Interactions+ enabled");
