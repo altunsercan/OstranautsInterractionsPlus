@@ -14,5 +14,18 @@ namespace InteractionsPlus.JsonMerging
             JsonType = type;
             AppendAction = appendAction;
         }
+
+        public void ParseModPath(string modPath)
+        {
+            ParseDataSource(modPath, this);
+        }
+        
+        private void ParseDataSource(string modPath, JsonDataSource dataSource)
+        {
+            var jsonPath = dataSource.Path;
+            var parseDelegate = JsonParsingUtils.GetParseAdditionalJsonInPathAndAppendTypeless(dataSource.JsonType);
+            parseDelegate(modPath,  jsonPath, dataSource.AppendAction);
+        }
+        
     }
 }

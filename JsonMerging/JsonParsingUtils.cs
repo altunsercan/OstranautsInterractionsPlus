@@ -79,5 +79,57 @@ namespace InteractionsPlus.JsonMerging
                 appendDelegate(key, JsonMapper.ToObject<TJson>(parsedJsonData.ToJson()));
             }
         }
+
+        public delegate void ParseAndAppendUntypedDelegate(string modPath, string jsonPath, Action<string, object> appendDelegate);
+        [NotNull, ItemNotNull]
+        private static readonly Dictionary<Type, ParseAndAppendUntypedDelegate> cachedDelegates = new Dictionary<Type, ParseAndAppendUntypedDelegate>();
+        
+        [NotNull]
+        public static ParseAndAppendUntypedDelegate GetParseAdditionalJsonInPathAndAppendTypeless([NotNull] Type jsonType)
+        {
+            if (cachedDelegates.TryGetValue(jsonType, out var existing))
+            {
+                return existing;
+            }
+            
+            var delegateType = typeof(Action<string, string, Action<string, object>>);
+            var genericMethod = typeof(JsonParsingUtils).GetMethod(nameof(ParseAdditionalJsonInPathAndAppendTypeless));
+            var concreteMethod = genericMethod.MakeGenericMethod(jsonType);
+
+            var @delegate = (Action<string, string, Action<string, object>>) Delegate.CreateDelegate(delegateType, concreteMethod);
+            ParseAndAppendUntypedDelegate concreteDelegate = (mp,jp,ap) => @delegate(mp, jp, ap);
+            cachedDelegates.Add(jsonType, concreteDelegate);
+            return concreteDelegate;
+        }
+        
+        public static void ParseAdditionalJsonInPathAndAppendTypeless<TJson>([NotNull] string modPath, [NotNull] string jsonPath,
+            [NotNull] Action<string, object> appendDelegate)
+        {
+            var additionalJsonPath = Path.Combine(modPath, jsonPath);
+            // logger?.Log($"Modpath {modPath} jsonPath{jsonPath} merged {additionalJsonPath}");
+            if (!File.Exists(additionalJsonPath))
+            {
+                return;
+            }
+            
+            string jsonString = File.ReadAllText(additionalJsonPath, Encoding.UTF8);
+            JsonData jsonArray = JsonMapper.ToObject(jsonString);
+            if (jsonArray == null || !jsonArray.IsArray)
+            {
+                return;
+            }
+            
+            foreach (JsonData parsedJsonData in jsonArray)
+            {
+                if (parsedJsonData == null || parsedJsonData["strName"] == null)
+                {
+                    continue;
+                }
+                
+                var key = parsedJsonData["strName"].ToString();
+                appendDelegate(key, JsonMapper.ToObject<TJson>(parsedJsonData.ToJson()));
+            }
+        }
+        
     }
 }
