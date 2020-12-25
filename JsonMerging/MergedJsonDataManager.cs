@@ -30,12 +30,21 @@ namespace InteractionsPlus.JsonMerging
             jsonDataSourceCollection.InitializeDataSources();
         }
         
-        public void LoadJsonData(string modPath)
+        public void LoadPostFixJsonData(string modPath)
         {
-            foreach (JsonDataSource dataSource in jsonDataSourceCollection)
+            logger.Log($"Loading data for mod {modPath}");
+            var enumerable = jsonDataSourceCollection.EnumeratePostFixDataSources();
+            while (enumerable.MoveNext())
             {
+                JsonDataSource dataSource = (JsonDataSource)enumerable.Current;
                 dataSource.ParseModPath(modPath);
             }
+        }
+
+        public void LoadPostProcessing(string modPath, string postProcessMethodName)
+        {
+            PostProcessedDataSource source = jsonDataSourceCollection.GetPostProcessedSourceFor(postProcessMethodName);
+            source.ParseModPath(modPath);
         }
         
         

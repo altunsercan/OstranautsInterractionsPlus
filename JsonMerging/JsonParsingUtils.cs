@@ -87,6 +87,8 @@ namespace InteractionsPlus.JsonMerging
         [NotNull]
         public static ParseAndAppendUntypedDelegate GetParseAdditionalJsonInPathAndAppendTypeless([NotNull] Type jsonType)
         {
+            InteractionsPlusMod.Services.TryResolve(out logger);
+            
             if (cachedDelegates.TryGetValue(jsonType, out var existing))
             {
                 return existing;
@@ -105,10 +107,12 @@ namespace InteractionsPlus.JsonMerging
         public static void ParseAdditionalJsonInPathAndAppendTypeless<TJson>([NotNull] string modPath, [NotNull] string jsonPath,
             [NotNull] Action<string, object> appendDelegate)
         {
+            InteractionsPlusMod.Services.TryResolve(out logger);
             var additionalJsonPath = Path.Combine(modPath, jsonPath);
-            // logger?.Log($"Modpath {modPath} jsonPath{jsonPath} merged {additionalJsonPath}");
+            //logger?.Log($"Modpath {modPath} jsonPath{jsonPath} merged {additionalJsonPath}");
             if (!File.Exists(additionalJsonPath))
             {
+                //logger?.Error($"Missing file {additionalJsonPath}");
                 return;
             }
             
@@ -116,6 +120,7 @@ namespace InteractionsPlus.JsonMerging
             JsonData jsonArray = JsonMapper.ToObject(jsonString);
             if (jsonArray == null || !jsonArray.IsArray)
             {
+                logger?.Error($"Not an json array {additionalJsonPath}");
                 return;
             }
             
@@ -123,10 +128,12 @@ namespace InteractionsPlus.JsonMerging
             {
                 if (parsedJsonData == null || parsedJsonData["strName"] == null)
                 {
+                    logger?.Error($"Empty or no strName");
                     continue;
                 }
                 
                 var key = parsedJsonData["strName"].ToString();
+                logger?.Log($"Add data {key}");
                 appendDelegate(key, JsonMapper.ToObject<TJson>(parsedJsonData.ToJson()));
             }
         }

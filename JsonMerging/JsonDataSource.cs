@@ -2,7 +2,7 @@
 
 namespace InteractionsPlus.JsonMerging
 {
-    internal class JsonDataSource
+    internal abstract class JsonDataSource
     {
         public readonly string Path;
         public readonly Type JsonType;
@@ -17,15 +17,9 @@ namespace InteractionsPlus.JsonMerging
 
         public void ParseModPath(string modPath)
         {
-            ParseDataSource(modPath, this);
+            ParseDataSource(modPath);
         }
-        
-        private void ParseDataSource(string modPath, JsonDataSource dataSource)
-        {
-            var jsonPath = dataSource.Path;
-            var parseDelegate = JsonParsingUtils.GetParseAdditionalJsonInPathAndAppendTypeless(dataSource.JsonType);
-            parseDelegate(modPath,  jsonPath, dataSource.AppendAction);
-        }
-        
+
+        protected abstract void ParseDataSource(string modPath);
     }
 }

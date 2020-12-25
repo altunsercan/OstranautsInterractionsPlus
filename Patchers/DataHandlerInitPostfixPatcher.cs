@@ -6,9 +6,8 @@ using InteractionsPlus.ModDependency;
 namespace InteractionsPlus.Patchers
 {
     [HarmonyPatch(typeof(DataHandler))]
-    public class DataHandlerAdditionalJsonPatcher
+    public class DataHandlerInitPostfixPatcher
     {
-        
         private static ILogger logger;
         
         [HarmonyPostfix]
@@ -28,7 +27,7 @@ namespace InteractionsPlus.Patchers
             List<string> modPathList = dependencyManager.GetDependentModPaths(true);
             foreach (string modPath in modPathList)
             {
-                jsonDataCache.LoadJsonData(modPath);
+                jsonDataCache.LoadPostFixJsonData(modPath);
             }
         }
     }
