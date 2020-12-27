@@ -1,4 +1,5 @@
 ﻿using System;
+using InteractionsPlus.ModDependency;
 using InteractionsPlus.UI.IMGUI;
 using JetBrains.Annotations;
 using UnityModManagerNet;
@@ -34,7 +35,12 @@ namespace InteractionsPlus
             {
                 guiExecutor = executor;
             }
-            
+
+            if (InteractionsPlusMod.Services.TryResolve(out UMMDependencyManager dependencyManager))
+            {
+                dependencyManager.SetModList(UnityModManager.modEntries);
+            }
+
             return true;
         }
 

@@ -7,7 +7,7 @@
         <AssemblyVersion>0.1.0</AssemblyVersion>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <PropertyGroup>
       <OutputPath>D:\SteamLibrary\steamapps\common\Ostranauts\Mods\InteractionsPlus\</OutputPath>
     </PropertyGroup>
 
