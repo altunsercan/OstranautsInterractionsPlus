@@ -115,9 +115,20 @@ namespace InteractionsPlus.JsonMerging
                 //logger?.Error($"Missing file {additionalJsonPath}");
                 return;
             }
+
+            JsonData jsonArray = null;
+            try
+            {
+                string jsonString = File.ReadAllText(additionalJsonPath, Encoding.UTF8);
+                jsonArray = JsonMapper.ToObject(jsonString);
+            }
+            catch (Exception e)
+            {
+                logger?.Error($"Cannot parse invalid json format {additionalJsonPath}");
+                logger?.LogException(e);
+                return;
+            }
             
-            string jsonString = File.ReadAllText(additionalJsonPath, Encoding.UTF8);
-            JsonData jsonArray = JsonMapper.ToObject(jsonString);
             if (jsonArray == null || !jsonArray.IsArray)
             {
                 logger?.Error($"Not an json array {additionalJsonPath}");
