@@ -115,16 +115,8 @@ namespace InteractionsPlus.JsonMerging
                 return;
             }
 
-            JsonData jsonArray = null;
-            try
+            if (TryReadAndParseGenericJsonObject(additionalJsonPath, out JsonData jsonArray))
             {
-                string jsonString = File.ReadAllText(additionalJsonPath, Encoding.UTF8);
-                jsonArray = JsonMapper.ToObject(jsonString);
-            }
-            catch (Exception e)
-            {
-                logger?.Error($"Cannot parse invalid json format {additionalJsonPath}");
-                logger?.LogException(e);
                 return;
             }
             
@@ -141,24 +133,43 @@ namespace InteractionsPlus.JsonMerging
                     logger?.Error($"Empty or no strName");
                     continue;
                 }
-                
-                var key = parsedJsonData["strName"].ToString();
-                
-                TJson typedJson;
-                try
-                {
-                    typedJson = JsonMapper.ToObject<TJson>(parsedJsonData.ToJson());
-                    appendDelegate(key, typedJson);
-                }
-                catch (Exception e)
-                {
-                    var richException = new JsonFormatException(e, key, typeof(TJson));
-                    Console.WriteLine(richException);
-                    throw richException;
-                }
-                
+                ConvertToTypedJsonAndAppend<TJson>(appendDelegate, parsedJsonData);
             }
         }
-        
+
+        private static bool TryReadAndParseGenericJsonObject(string additionalJsonPath, out JsonData jsonArray)
+        {
+            try
+            {
+                string jsonString = File.ReadAllText(additionalJsonPath, Encoding.UTF8);
+                jsonArray = JsonMapper.ToObject(jsonString);
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger?.Error($"Cannot parse invalid json format {additionalJsonPath}");
+                logger?.LogException(e);
+                jsonArray = null;
+                return false;
+            }
+        }
+
+        private static void ConvertToTypedJsonAndAppend<TJson>(Action<string, object> appendDelegate, JsonData parsedJsonData)
+        {
+            var key = parsedJsonData["strName"].ToString();
+
+            TJson typedJson;
+            try
+            {
+                typedJson = JsonMapper.ToObject<TJson>(parsedJsonData.ToJson());
+                appendDelegate(key, typedJson);
+            }
+            catch (Exception e)
+            {
+                var richException = new JsonFormatException(e, key, typeof(TJson));
+                Console.WriteLine(richException);
+                throw richException;
+            }
+        }
     }
 }
