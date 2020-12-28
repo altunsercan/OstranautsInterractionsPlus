@@ -21,7 +21,7 @@ namespace InteractionsPlus.JsonMerging
 
         public void InitializeDataSources()
         {
-            var dictionaryFieldList = FindDictionaryFieldList();
+            var dictionaryAccessor = new DataHandlerDictionaryAccessor(logger);
 
             AddDataSource<JsonColor>("colors.json","dictJsonColors");
             AddDataSource<JsonLight>("lights.json","dictLights");
@@ -80,20 +80,23 @@ namespace InteractionsPlus.JsonMerging
             {
                 T typeJson = (T) typelessJson;
 
-                Dictionary<string, T> dictionary = GetDictionary<T>(dictionaryName);
+                Dictionary<string, T> dictionary = dictionaryAccessor.GetDictionary<T>(dictionaryName);
                 if (dictionary == null)
                 {
+                    logger.Error($"Cannot find dictionary target for {dictionaryName}");
                     return;
                 }
                 
                 if (dictionary.ContainsKey(key))
                 {
                     logger.Error($"Cannot append {key}. Key already exists.");
-                    return;
+                    
                 }
-                logger.Log($"Data {key} appended");
-                
-                dictionary.Add(key, typeJson);
+                else
+                {
+                    logger.Log($"Appending data: {key}");
+                    dictionary.Add(key, typeJson);   
+                }
             }
             
             void AppendSocialInteraction(string key, object typelessJson)
@@ -107,8 +110,8 @@ namespace InteractionsPlus.JsonMerging
 
                 JsonInteraction jsonInteraction =  (JsonInteraction) typelessJson;
                 
-                Dictionary<string, JsonInteraction> interactionsDict = GetDictionary<JsonInteraction>("dictInteractions");
-                Dictionary<string, SocialStats> socialStatsDict = GetDictionary<SocialStats>("dictSocialStats");
+                Dictionary<string, JsonInteraction> interactionsDict = dictionaryAccessor.GetDictionary<JsonInteraction>("dictInteractions");
+                Dictionary<string, SocialStats> socialStatsDict = dictionaryAccessor.GetDictionary<SocialStats>("dictSocialStats");
                 if (interactionsDict == null || socialStatsDict == null)
                 {
                     return;
@@ -124,23 +127,6 @@ namespace InteractionsPlus.JsonMerging
                 Installables.Create(installable);
             }
             
-
-            Dictionary<string, T> GetDictionary<T>(string dictionaryName)
-            {
-                if (!dictionaryFieldList.TryGetValue(dictionaryName, out FieldInfo field))
-                {
-                    logger.Error($"Cannot find data dictionary {dictionaryName}.");
-                    return null;
-                }
-                
-                return GetDictionaryFromFieldInfo<T>(field);
-            }
-            
-            Dictionary<string, T> GetDictionaryFromFieldInfo<T>(FieldInfo field)
-            {
-                return (Dictionary<string, T>) field.GetValue(null);
-            }
-
             void AddSimpleSource(string path, string postParseMethod)
             {
                 AddSource<JsonSimple>(DataPath + path, "dictSimple", postParseMethod);
@@ -164,23 +150,6 @@ namespace InteractionsPlus.JsonMerging
                     postProcessedDataSources.Add(postParseMethod, new PostProcessedDataSource(path, typeof(T), append, postParseMethod));
                 }
             }
-        }
-
-        private static Dictionary<string, FieldInfo> FindDictionaryFieldList()
-        {
-            var dictionaryField = new Dictionary<string, FieldInfo>();
-            var fieldList = typeof(DataHandler).GetFields();
-            foreach (FieldInfo field in fieldList)
-            {
-                if (!typeof(IDictionary).IsAssignableFrom(field.FieldType))
-                {
-                    continue;
-                }
-
-                dictionaryField.Add(field.Name, field);
-            }
-
-            return dictionaryField;
         }
 
         public IEnumerator EnumeratePostFixDataSources() => postFixOnlyDataSource.GetEnumerator();
