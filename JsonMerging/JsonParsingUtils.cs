@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using InteractionsPlus.Exceptions;
 using InteractionsPlus.JetBrains.Annotations;
 using LitJson;
 
@@ -109,10 +110,8 @@ namespace InteractionsPlus.JsonMerging
         {
             InteractionsPlusMod.Services.TryResolve(out logger);
             var additionalJsonPath = Path.Combine(modPath, jsonPath);
-            //logger?.Log($"Modpath {modPath} jsonPath{jsonPath} merged {additionalJsonPath}");
             if (!File.Exists(additionalJsonPath))
             {
-                //logger?.Error($"Missing file {additionalJsonPath}");
                 return;
             }
 
@@ -144,8 +143,20 @@ namespace InteractionsPlus.JsonMerging
                 }
                 
                 var key = parsedJsonData["strName"].ToString();
-                logger?.Log($"Add data {key}");
-                appendDelegate(key, JsonMapper.ToObject<TJson>(parsedJsonData.ToJson()));
+                
+                TJson typedJson;
+                try
+                {
+                    typedJson = JsonMapper.ToObject<TJson>(parsedJsonData.ToJson());
+                    appendDelegate(key, typedJson);
+                }
+                catch (Exception e)
+                {
+                    var richException = new JsonFormatException(e, key, typeof(TJson));
+                    Console.WriteLine(richException);
+                    throw richException;
+                }
+                
             }
         }
         
