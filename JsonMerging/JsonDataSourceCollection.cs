@@ -37,7 +37,7 @@ namespace InteractionsPlus.JsonMerging
             
             //DataHandler.LoadShips(); // Multi json source
 
-            AddDataSource<JsonCondOwner>("loot.json", "dictLoot");
+            AddDataSource<Loot>("loot.json", "dictLoot");
             //DataHandler.TxtToData(DataHandler.strAssetPath + DataHandler.strDataPath + "names_last.json", DataHandler.aNamesLast);
             //DataHandler.dictSimple.Clear();
             AddSimpleSource("names_first.json", "ParseFirstNames");
