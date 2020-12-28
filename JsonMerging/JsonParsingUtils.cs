@@ -108,24 +108,11 @@ namespace InteractionsPlus.JsonMerging
         public static void ParseAdditionalJsonInPathAndAppendTypeless<TJson>([NotNull] string modPath, [NotNull] string jsonPath,
             [NotNull] Action<string, object> appendDelegate)
         {
-            InteractionsPlusMod.Services.TryResolve(out logger);
-            var additionalJsonPath = Path.Combine(modPath, jsonPath);
-            if (!File.Exists(additionalJsonPath))
+            if (!TryParseAdditionalJsonInPath(modPath, jsonPath, out JsonData jsonArray) || jsonArray == null)
             {
                 return;
             }
 
-            if (TryReadAndParseGenericJsonObject(additionalJsonPath, out JsonData jsonArray))
-            {
-                return;
-            }
-            
-            if (jsonArray == null || !jsonArray.IsArray)
-            {
-                logger?.Error($"Not an json array {additionalJsonPath}");
-                return;
-            }
-            
             foreach (JsonData parsedJsonData in jsonArray)
             {
                 if (parsedJsonData == null || parsedJsonData["strName"] == null)
@@ -135,6 +122,30 @@ namespace InteractionsPlus.JsonMerging
                 }
                 ConvertToTypedJsonAndAppend<TJson>(appendDelegate, parsedJsonData);
             }
+        }
+
+        public static bool TryParseAdditionalJsonInPath([NotNull] string modPath, [NotNull] string jsonPath, out JsonData jsonArray)
+        {
+            InteractionsPlusMod.Services.TryResolve(out logger);
+            var additionalJsonPath = Path.Combine(modPath, jsonPath);
+            if (!File.Exists(additionalJsonPath))
+            {
+                jsonArray = null;
+                return false;
+            }
+
+            if (!TryReadAndParseGenericJsonObject(additionalJsonPath, out jsonArray))
+            {
+                return false;
+            }
+
+            if (jsonArray == null || !jsonArray.IsArray)
+            {
+                logger?.Error($"Not an json array {additionalJsonPath}");
+                return false;
+            }
+
+            return true;
         }
 
         private static bool TryReadAndParseGenericJsonObject(string additionalJsonPath, out JsonData jsonArray)
