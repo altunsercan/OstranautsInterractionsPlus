@@ -1,19 +1,14 @@
-﻿using System;
+﻿using InteractionsPlus.JetBrains.Annotations;
 
 namespace InteractionsPlus.JsonMerging
 {
-    internal class SimplePostfixOnlyDataSource : JsonDataSource
+    internal interface SimplePostfixOnlyDataSource : JsonDataSource { }
+    
+    internal class SimplePostfixOnlyDataSource<TJson> : DataHandlerDictionarySource<TJson>, SimplePostfixOnlyDataSource
     {
-        public SimplePostfixOnlyDataSource(string path, Type type, Action<string, object> appendAction)
-            : base(path, type, appendAction)
+        public SimplePostfixOnlyDataSource([NotNull] ILogger logger, [NotNull] string path, [NotNull] string dictionaryName, 
+            [NotNull] DataHandlerDictionaryAccessor accessor) : base(logger, path, dictionaryName, accessor)
         {
-        }
-
-        protected override void ParseDataSource(string modPath)
-        {
-            var jsonPath = Path;
-            var parseDelegate = JsonParsingUtils.GetParseAdditionalJsonInPathAndAppendTypeless(JsonType);
-            parseDelegate(modPath,  jsonPath, AppendAction);
         }
     }
 }

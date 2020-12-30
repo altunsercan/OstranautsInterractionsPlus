@@ -108,7 +108,7 @@ namespace InteractionsPlus.JsonMerging
         public static void ParseAdditionalJsonInPathAndAppendTypeless<TJson>([NotNull] string modPath, [NotNull] string jsonPath,
             [NotNull] Action<string, object> appendDelegate)
         {
-            if (!TryParseAdditionalJsonInPath(modPath, jsonPath, out JsonData jsonArray) || jsonArray == null)
+            if (!TryParseAdditionalJsonArrayInPath(modPath, jsonPath, out JsonData jsonArray) || jsonArray == null)
             {
                 return;
             }
@@ -124,7 +124,7 @@ namespace InteractionsPlus.JsonMerging
             }
         }
 
-        public static bool TryParseAdditionalJsonInPath([NotNull] string modPath, [NotNull] string jsonPath, out JsonData jsonArray)
+        public static bool TryParseAdditionalJsonArrayInPath([NotNull] string modPath, [NotNull] string jsonPath, out JsonData jsonArray)
         {
             InteractionsPlusMod.Services.TryResolve(out logger);
             var additionalJsonPath = Path.Combine(modPath, jsonPath);
@@ -168,16 +168,18 @@ namespace InteractionsPlus.JsonMerging
         private static void ConvertToTypedJsonAndAppend<TJson>(Action<string, object> appendDelegate, JsonData parsedJsonData)
         {
             var key = parsedJsonData["strName"].ToString();
+            
+        }
 
-            TJson typedJson;
+        public static TJson ConvertToTypedJson<TJson>([NotNull] JsonData parsedJsonData, string debugKey = null)
+        {
             try
             {
-                typedJson = JsonMapper.ToObject<TJson>(parsedJsonData.ToJson());
-                appendDelegate(key, typedJson);
+                return JsonMapper.ToObject<TJson>(parsedJsonData.ToJson());
             }
             catch (Exception e)
             {
-                var richException = new JsonFormatException(e, key, typeof(TJson));
+                var richException = new JsonFormatException(e, debugKey, typeof(TJson));
                 Console.WriteLine(richException);
                 throw richException;
             }

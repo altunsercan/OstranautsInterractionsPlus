@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using JetBrains.Annotations;
 
 namespace InteractionsPlus.JsonMerging
@@ -70,8 +69,13 @@ namespace InteractionsPlus.JsonMerging
             AddDataSource<CondTrigger>("condtrigs2.json", "dictCTs");
             
             // Special handling of interaction2.json
-            postFixOnlyDataSource.Add(new SimplePostfixOnlyDataSource(DataPath+"interactions2.json", typeof(JsonInteraction), AppendSocialInteraction));
-            postFixOnlyDataSource.Add(new SimplePostfixOnlyDataSource(DataPath+"installables.json", typeof(JsonInstallable), AppendInstallable));
+            var socialInteractions = new SimplePostfixOnlyDataSource<JsonInteraction>(logger,DataPath + "interactions2.json",
+                "dictSocials", dictionaryAccessor);
+            socialInteractions.ItemProcessed += AppendSocialInteraction;
+            postFixOnlyDataSource.Add(socialInteractions);
+
+            var installables = new SimplePostFixTempDictionarySource<JsonInstallable>(logger, DataPath + "installables.json");
+            postFixOnlyDataSource.Add(installables);
             
             AddSource<JsonSetting>("settings.json", "dictSettings");
             
@@ -99,16 +103,14 @@ namespace InteractionsPlus.JsonMerging
                 }
             }
             
-            void AppendSocialInteraction(string key, object typelessJson)
+            void AppendSocialInteraction(JsonInteraction jsonInteraction)
             {
-                if (typelessJson == null)
+                if (jsonInteraction?.strName == null)
                 {
                     return;
                 }
-                
-                Append<JsonInteraction>(key, typelessJson, "dictSocials");
 
-                JsonInteraction jsonInteraction =  (JsonInteraction) typelessJson;
+                var key = jsonInteraction.strName;
                 
                 Dictionary<string, JsonInteraction> interactionsDict = dictionaryAccessor.GetDictionary<JsonInteraction>("dictInteractions");
                 Dictionary<string, SocialStats> socialStatsDict = dictionaryAccessor.GetDictionary<SocialStats>("dictSocialStats");
@@ -116,14 +118,12 @@ namespace InteractionsPlus.JsonMerging
                 {
                     return;
                 }
-                interactionsDict[jsonInteraction.strName] = jsonInteraction;
-                socialStatsDict[jsonInteraction.strName] = new SocialStats(jsonInteraction.strName);
+                interactionsDict[key] = jsonInteraction;
+                socialStatsDict[key] = new SocialStats(key);
             }
 
-            void AppendInstallable(string key, object typelessJson)
+            void AppendInstallable(JsonInstallable installable)
             {
-                JsonInstallable installable = (JsonInstallable) typelessJson;
-                
                 Installables.Create(installable);
             }
             
@@ -143,11 +143,11 @@ namespace InteractionsPlus.JsonMerging
 
                 if (postParseMethod==null)
                 {
-                    postFixOnlyDataSource.Add(new SimplePostfixOnlyDataSource(path, typeof(T), append));
+                    postFixOnlyDataSource.Add(new SimplePostfixOnlyDataSource<T>(logger, path, dictionaryName, dictionaryAccessor));
                 }
                 else
                 {
-                    postProcessedDataSources.Add(postParseMethod, new PostProcessedDataSource(path, typeof(T), append, postParseMethod));
+                    postProcessedDataSources.Add(postParseMethod, new PostProcessedDataSource<T>(logger, path, postParseMethod, dictionaryName, dictionaryAccessor));
                 }
             }
         }
