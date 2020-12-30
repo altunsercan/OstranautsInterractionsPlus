@@ -1,12 +1,16 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace InteractionsPlus.JsonMerging
 {
-    internal class PostProcessedDataSource : SimplePostfixOnlyDataSource
+    internal interface PostProcessedDataSource : JsonDataSource { }
+    
+    internal class PostProcessedDataSource<TJson> : SimplePostfixOnlyDataSource<TJson>, PostProcessedDataSource
     {
         public readonly string PostProcessMethodName;
 
-        public PostProcessedDataSource(string path, Type type, Action<string, object> appendAction, string postProcessMethodName) : base(path, type, appendAction)
+        public PostProcessedDataSource([NotNull] ILogger logger, [NotNull] string path, [NotNull] string postProcessMethodName, [NotNull] string dictionaryName, 
+        [NotNull] DataHandlerDictionaryAccessor accessor) : base(logger, path, dictionaryName, accessor)
         {
             PostProcessMethodName = postProcessMethodName;
         }

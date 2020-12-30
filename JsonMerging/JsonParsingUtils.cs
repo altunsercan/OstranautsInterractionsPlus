@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using InteractionsPlus.Exceptions;
 using InteractionsPlus.JetBrains.Annotations;
 using LitJson;
 
@@ -107,34 +108,11 @@ namespace InteractionsPlus.JsonMerging
         public static void ParseAdditionalJsonInPathAndAppendTypeless<TJson>([NotNull] string modPath, [NotNull] string jsonPath,
             [NotNull] Action<string, object> appendDelegate)
         {
-            InteractionsPlusMod.Services.TryResolve(out logger);
-            var additionalJsonPath = Path.Combine(modPath, jsonPath);
-            //logger?.Log($"Modpath {modPath} jsonPath{jsonPath} merged {additionalJsonPath}");
-            if (!File.Exists(additionalJsonPath))
+            if (!TryParseAdditionalJsonArrayInPath(modPath, jsonPath, out JsonData jsonArray) || jsonArray == null)
             {
-                //logger?.Error($"Missing file {additionalJsonPath}");
                 return;
             }
 
-            JsonData jsonArray = null;
-            try
-            {
-                string jsonString = File.ReadAllText(additionalJsonPath, Encoding.UTF8);
-                jsonArray = JsonMapper.ToObject(jsonString);
-            }
-            catch (Exception e)
-            {
-                logger?.Error($"Cannot parse invalid json format {additionalJsonPath}");
-                logger?.LogException(e);
-                return;
-            }
-            
-            if (jsonArray == null || !jsonArray.IsArray)
-            {
-                logger?.Error($"Not an json array {additionalJsonPath}");
-                return;
-            }
-            
             foreach (JsonData parsedJsonData in jsonArray)
             {
                 if (parsedJsonData == null || parsedJsonData["strName"] == null)
@@ -142,12 +120,69 @@ namespace InteractionsPlus.JsonMerging
                     logger?.Error($"Empty or no strName");
                     continue;
                 }
-                
-                var key = parsedJsonData["strName"].ToString();
-                logger?.Log($"Add data {key}");
-                appendDelegate(key, JsonMapper.ToObject<TJson>(parsedJsonData.ToJson()));
+                ConvertToTypedJsonAndAppend<TJson>(appendDelegate, parsedJsonData);
             }
         }
-        
+
+        public static bool TryParseAdditionalJsonArrayInPath([NotNull] string modPath, [NotNull] string jsonPath, out JsonData jsonArray)
+        {
+            InteractionsPlusMod.Services.TryResolve(out logger);
+            var additionalJsonPath = Path.Combine(modPath, jsonPath);
+            if (!File.Exists(additionalJsonPath))
+            {
+                jsonArray = null;
+                return false;
+            }
+
+            if (!TryReadAndParseGenericJsonObject(additionalJsonPath, out jsonArray))
+            {
+                return false;
+            }
+
+            if (jsonArray == null || !jsonArray.IsArray)
+            {
+                logger?.Error($"Not an json array {additionalJsonPath}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool TryReadAndParseGenericJsonObject(string additionalJsonPath, out JsonData jsonArray)
+        {
+            try
+            {
+                string jsonString = File.ReadAllText(additionalJsonPath, Encoding.UTF8);
+                jsonArray = JsonMapper.ToObject(jsonString);
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger?.Error($"Cannot parse invalid json format {additionalJsonPath}");
+                logger?.LogException(e);
+                jsonArray = null;
+                return false;
+            }
+        }
+
+        private static void ConvertToTypedJsonAndAppend<TJson>(Action<string, object> appendDelegate, JsonData parsedJsonData)
+        {
+            var key = parsedJsonData["strName"].ToString();
+            
+        }
+
+        public static TJson ConvertToTypedJson<TJson>([NotNull] JsonData parsedJsonData, string debugKey = null)
+        {
+            try
+            {
+                return JsonMapper.ToObject<TJson>(parsedJsonData.ToJson());
+            }
+            catch (Exception e)
+            {
+                var richException = new JsonFormatException(e, debugKey, typeof(TJson));
+                Console.WriteLine(richException);
+                throw richException;
+            }
+        }
     }
 }
